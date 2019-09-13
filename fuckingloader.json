@@ -1,0 +1,14 @@
+{
+    "name": "set_your_fucking_name",
+    "description": "You should set the name of your fucking project here",
+    "folders": [
+        "services"
+    ],
+    "pdo": {
+            "host": "192.168.64.2",
+            "dbname": "githubproject",
+            "user": "admin",
+            "password": "123"
+    },
+    "license": "MIT"
+}
