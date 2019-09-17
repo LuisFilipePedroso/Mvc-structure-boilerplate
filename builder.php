@@ -1,5 +1,5 @@
 <?php
-$json = file_get_contents('./fuckingloader.json');
+$json = file_get_contents('./loader.json');
 
 class Builder {
 
