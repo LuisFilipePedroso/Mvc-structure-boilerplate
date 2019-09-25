@@ -10,5 +10,17 @@
             "user": "admin",
             "password": "123"
     },
+    "routes": [
+        {
+            "name": "/users",
+            "controller": "UserController",
+            "method": "get"
+        },
+        {
+            "name": "/users/:id",
+            "controller": "UserController",
+            "method": "getById"
+        }
+    ],
     "license": "MIT"
 }

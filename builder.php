@@ -1,4 +1,10 @@
 <?php
+require('dist/Autoload.php');
+require('dist/ConnFile.php');
+require('dist/Folders.php');
+require('dist/Router.php');
+require('dist/Routes.php');
+
 $json = file_get_contents('./loader.json');
 
 class Builder {
@@ -7,65 +13,55 @@ class Builder {
         $json_data = json_decode($json,true);
         $folders = $json_data['folders'];
         $connection = $json_data['pdo'];
+        $routes = $json_data['routes'];
 
+        self::createFolders($folders);
+        self::createRouterClass();
+        
         self::createAutoload($folders);
-        self::createFolders($json_data['folders']);
         self::createConnFile($connection);
-    }
 
-    private function createAutoload($userFolder) {
-        $autoload = fopen("autoload.php", "w") or die("Unable to open file!");
-        $line = fwrite($autoload, "<?php\n");
-        $line = fwrite($autoload, "spl_autoload_register(function (\$classname) {
-            \$folders = " . json_encode($userFolders) . ";
-            foreach(\$folders as \$folder) {
-                if(file_exists(\$folder . DIRECTORY_SEPARATOR . \$classname . '.php')) {
-                    require_once(\$folder . DIRECTORY_SEPARATOR . \$classname . '.php');
-                }
-            }
-        });");
+        self::createRoutes($routes);
     }
 
     private function createFolders($userFolders) {
-        foreach($userFolders as $folder) {
-            if(!file_exists('./' . $folder)) {
-                mkdir('./' . $folder);
-            }
-        }
-    
-        if(!file_exists('./connection')) {
-            mkdir('./connection');
-        }   
+        $folders = new Folders();
+        $folders->setUserFolders($userFolders);
+        $folders->createFolders();
+    }
 
-        if(!file_exists('./controllers')) {
-            mkdir('./controllers');
+    private function createRouterClass() {
+        $router = new CreateRouter();
+        $router->generateRouterClass("./src/config", "Router");
+    }
+
+    private function createAutoload($userFolder) {
+        $autoload = new Autoload();
+        $folders = ['connection', 'controllers', 'config', 'models', 'views'];
+
+        foreach($userFolder as $folder) {
+            array_push($folders, $folder);
         }
 
-        if(!file_exists('./models')) {
-            mkdir('./models');
-        }
-
-        if(!file_exists('./views')) {
-            mkdir('./views');
-        }
+        $autoload->setUserFolders($folders);
+        $autoload->createAutoload();
     }
 
     private function createConnFile($connection) {
-        $connFile = fopen("./connection/index.php", "w") or die("Unable to open file!");
-        $line = fwrite($connFile, "<?php\n");
-        $line = fwrite($connFile, "
-        function connect() {
-            \$dsn = 'mysql:host=" . preg_replace('/"([a-zA-Z]+[a-zA-Z0-9_]*)":/','$1:',$connection['host']). ";dbname=" . $connection['dbname'] . "';
-            \$user = '" . $connection['user'] . "';
-            \$pass = '" . $connection['password'] . "';
-            
-            try{
-                return new PDO(\$dsn, \$user, \$pass);
-            }catch (PDOException \$e){
-                // report error message
-                echo \$e->getMessage();
-            }
-        }");
+        $connFile = new ConnFile();
+        $connFile->setConnection($connection);
+        $connFile->createConnFile();
+    }
+
+    private function createRoutes($routes) {
+        $routeFile = new CreateRoutes('./config');
+        foreach($routes as $route) {
+            $routeFile->setName($route['name']);
+            $routeFile->setController($route['controller']);
+            $routeFile->setMethod($route['method']);
+            $routeFile->addToFile();
+        }
+        $routeFile->finishFile();
     }
 }
 

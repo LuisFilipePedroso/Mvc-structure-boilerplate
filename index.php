@@ -1,6 +1,6 @@
 <?php
 
-require ('./connection/index.php');
+require ('./src/connection/index.php');
 
 $conn = connect();
 
